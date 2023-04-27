@@ -1,13 +1,18 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import endpoint from "../endpoint";
 
-export default function getProducts() {
+export default async function getProducts(page = 1, order = "product_name", desc = false) {
+  const dir = desc ? "DESC" : "ASC"
   const loginData = Cookies.get("token");
-  return axios
-    .get("http://localhost:8000/products", {
+  const { data } = await axios.get(
+    `${endpoint}/products?page=${page}&orderby=${order}&dir=${dir}`,
+    {
       headers: {
         Authorization: `Bearer ${loginData}`,
       },
-    })
-    .then((res) => res.data);
+    }
+  );
+
+  return data;
 }
