@@ -2,10 +2,10 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import endpoint from "../endpoint";
 
-export default async function addCategory (data) {
+export default async function deleteProduct(itemId) {
   const loginData = Cookies.get("token");
 
-  await axios.post(`${endpoint}/products/categories`, data, {
+  await axios.delete(`${endpoint}/products/${itemId}`, {
     headers: {
       Authorization: `Bearer ${loginData}`
     }

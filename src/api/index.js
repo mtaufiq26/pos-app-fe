@@ -2,3 +2,8 @@ export { default as getProducts } from "./getProducts";
 export { default as newProduct } from "./newProduct";
 export { default as editProduct } from "./editProduct";
 export { default as getCategories } from "./getCategories";
+export { default as addCategory } from "./addCategory";
+export { default as editCategory } from "./editCategory";
+export { default as formatRupiah } from "./formatRupiah";
+export { default as removeCategory } from "./removeCategory";
+export { default as deleteProduct } from "./deleteProduct";

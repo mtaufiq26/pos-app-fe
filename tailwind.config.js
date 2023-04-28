@@ -5,8 +5,9 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{tsx,jsx}",
-    "node_modules/daisyui/dist/**/*.js",
-    "node_modules/react-daisyui/dist/**/*.js"
+    "./node_modules/daisyui/dist/**/*.js",
+    "./node_modules/react-daisyui/dist/**/*.js",
+    "./node_modules/react-tailwindcss-select/dist/index.esm.js"
   ],
   theme: {
     extend: {},

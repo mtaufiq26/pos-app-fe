@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Button,
@@ -6,17 +6,19 @@ import {
   Input,
   FileInput,
   Textarea,
-  Select,
+  Select
 } from "react-daisyui";
+// import Select from "react-tailwindcss-select";
 import { useFormik } from "formik";
 import { editProduct, newProduct } from "../../api";
-import productSchema from "../../schema/productSchema";
+// import productSchema from "../../schema/productSchema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCategories } from "../../api";
 import Swal from "sweetalert2";
+import * as Yup from "yup";
 
 function ProductData(props) {
-  const { itemId, open, onClickBackdrop, onAddProduct } = props;
+  const { itemId, open, itemData, onClickBackdrop, onAddProduct } = props;
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["categories"],
@@ -32,13 +34,13 @@ function ProductData(props) {
       Swal.fire({
         title: "Success",
         icon: "success",
-        text: "Product Added",
+        text: `Product ${itemId ? "Edited" : "Added"}`,
       }).then((result) => {
         if (result.isConfirmed || result.isDismissed) {
           onAddProduct();
         }
       });
-      queryClient.invalidateQueries({ queryKey: ["products"] })
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
   const formik = useFormik({
@@ -49,20 +51,43 @@ function ProductData(props) {
       category_id: "1",
       product_image: null,
     },
-    validationSchema: productSchema,
+    validationSchema: Yup.object().shape({
+      product_name: Yup.string().required("Product Name is required"),
+      price: Yup.number("Price is number").required("Price is required"),
+      description: Yup.string(),
+      category_id: Yup.number(),
+      // product_image: Yup.mixed().default(null)
+    }),
     onSubmit: (values) => {
-      // const { product_name, price, description, category_id, product_image } = values;
-      // console.log(values);
-      // alert(values.product_image)
+      console.log(values);
       mutation.mutate(values);
       formik.resetForm()
     },
   });
 
+  useEffect(() => {
+    if (Object.keys(itemData)){
+      // const datas = {
+      //   product_name: itemData.product_name,
+      //   price: itemData.price,
+      //   description: itemData.description,
+      //   category_id: itemData.category_id,
+      //   product_image: null
+      // }
+      Object.keys(itemData).forEach(value => {
+        formik.setFieldValue(value, itemData[value]);
+      });
+    }
+  }, [itemData]);
+
+  useEffect(() => {
+    console.log(formik.values);
+  }, [formik.values]);
+
   return (
     <Modal open={open} onClickBackdrop={onClickBackdrop}>
       <Form onSubmit={formik.handleSubmit} encType="multipart/form-data">
-        <Modal.Header>{itemId ? "Edit" : "Add New"} Product</Modal.Header>
+        <Modal.Header>{itemId ? "Edit" : "Add New"} Product {itemId && `#${itemId}`}</Modal.Header>
         <Modal.Body className="p-3">
           <div className="mb-4">
             <label htmlFor="product_name">Product Name</label>
@@ -108,6 +133,7 @@ function ProductData(props) {
               className="w-full"
               name="category_id"
               id="category_id"
+              value={formik.values.category_id}
               onChange={formik.handleChange}
             >
               {query.data?.map((value, key) => {
@@ -118,6 +144,23 @@ function ProductData(props) {
                 );
               })}
             </Select>
+            {/* <Select 
+              options={
+                query.data?.map(value => {
+                  return {
+                    value: value.category_id,
+                    label: value.category_name
+                  }
+                })
+              } 
+              classNames={{
+                list: "bg-base-200",
+                menu: "bg-base-200",
+                searchBox: "bg-base-200 p-3 w-full flex",
+                searchIcon: "max-w-5 max-h-5 absolute text-right top-5 end-5"
+              }}
+              isSearchable={true}
+              /> */}
           </div>
 
           <div className="mb-4">

@@ -5,7 +5,7 @@ const productSchema = Yup.object().shape({
   price: Yup.number("Price is number").required("Price is required"),
   description: Yup.string(),
   category_id: Yup.number(),
-  product_image: Yup.mixed().required("Product Image is required")
+  product_image: Yup.mixed()
 });
 
 export default productSchema;

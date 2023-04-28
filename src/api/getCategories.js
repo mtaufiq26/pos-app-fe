@@ -6,9 +6,11 @@ export default async function getCategories() {
   const loginData = Cookies.get("token");
   const { data } = await axios.get(`${endpoint}/products/categories`, {
     headers: {
-      Authorization: `Bearer ${loginData}`
-    }
+      Authorization: `Bearer ${loginData}`,
+    },
   });
+  // console.log(data);
+  // alert(data);
 
   return data;
 }
