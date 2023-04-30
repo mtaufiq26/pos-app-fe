@@ -1,4 +1,4 @@
-import { Button, Card, Select, Table } from "react-daisyui";
+import { Button, Card, Table, Select } from "react-daisyui";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getProducts, deleteProduct } from "../api";
@@ -12,6 +12,7 @@ import ProductData from "./modals/ProductData";
 import { formatRupiah } from "../api";
 import CategoryModal from "./modals/CategoryModal";
 import { Img } from "react-image";
+// import Select from "react-select";
 import Swal from "sweetalert2";
 
 export default function Products() {
@@ -60,11 +61,6 @@ export default function Products() {
     });
   };
 
-  useEffect(() => {
-    // itemId > 0 && setOpenModal(true);
-    console.log(itemData);
-  }, [itemData]);
-
   return (
     <Card className="bg-base-200 shadow-md shadow-blue-700">
       <ProductData
@@ -82,7 +78,7 @@ export default function Products() {
       <Card.Body>
         <Card.Title className="mb-3">Products</Card.Title>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Button color="success" onClick={toggleProductModal}>
+          <Button color="success" onClick={() => toggleProductModal(0)}>
             Add Product
           </Button>
           <Button color="info" onClick={toggleCategoryModal}>
@@ -144,7 +140,13 @@ export default function Products() {
         </div>
         <div className="flex justify-center items-center gap-2">
           Page
-          <Select></Select>
+          <Select onChange={(e) => setPage(Number(e.currentTarget.value))}>
+            {query.data?.pages?.map(value => (
+              <Select.Option value={value}>
+                {value}
+              </Select.Option>
+            ))}
+          </Select>
         </div>
       </Card.Body>
     </Card>

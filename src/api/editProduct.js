@@ -11,5 +11,5 @@ export default async function editProduct(itemId, data) {
     }
   });
 
-  console.log(result);
+  // console.log(result);
 }

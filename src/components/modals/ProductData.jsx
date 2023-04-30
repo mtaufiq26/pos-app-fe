@@ -1,21 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  Button,
-  Form,
-  Input,
-  FileInput,
-  Textarea,
-  Select
-} from "react-daisyui";
-// import Select from "react-tailwindcss-select";
+import { Modal, Button, Form, Input, FileInput, Textarea } from "react-daisyui";
 import { useFormik } from "formik";
 import { editProduct, newProduct } from "../../api";
-// import productSchema from "../../schema/productSchema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCategories } from "../../api";
 import Swal from "sweetalert2";
 import * as Yup from "yup";
+import Select from "react-select";
 
 function ProductData(props) {
   const { itemId, open, itemData, onClickBackdrop, onAddProduct } = props;
@@ -30,6 +21,12 @@ function ProductData(props) {
   };
   const mutation = useMutation({
     mutationFn: async (formData) => await submitFunc(formData),
+    onError: () =>
+      Swal.fire({
+        title: "Error",
+        text: `Can't ${itemId ? "edit" : "add"} product`,
+        icon: "error",
+      }),
     onSuccess: () => {
       Swal.fire({
         title: "Success",
@@ -61,38 +58,33 @@ function ProductData(props) {
     onSubmit: (values) => {
       console.log(values);
       mutation.mutate(values);
-      formik.resetForm()
+      formik.resetForm();
     },
   });
 
   useEffect(() => {
-    if (Object.keys(itemData)){
-      // const datas = {
-      //   product_name: itemData.product_name,
-      //   price: itemData.price,
-      //   description: itemData.description,
-      //   category_id: itemData.category_id,
-      //   product_image: null
-      // }
-      Object.keys(itemData).forEach(value => {
+    if (Object.keys(itemData)) {
+      Object.keys(itemData).forEach((value) => {
         formik.setFieldValue(value, itemData[value]);
       });
     }
   }, [itemData]);
 
   useEffect(() => {
-    console.log(formik.values);
-  }, [formik.values]);
+    !itemId && formik.resetForm();
+  }, [itemId]);
 
   return (
     <Modal open={open} onClickBackdrop={onClickBackdrop}>
       <Form onSubmit={formik.handleSubmit} encType="multipart/form-data">
-        <Modal.Header>{itemId ? "Edit" : "Add New"} Product {itemId && `#${itemId}`}</Modal.Header>
+        <Modal.Header>
+          {itemId ? "Edit" : "Add New"} Product {itemId && `#${itemId}`}
+        </Modal.Header>
         <Modal.Body className="p-3">
           <div className="mb-4">
             <label htmlFor="product_name">Product Name</label>
             <Input
-              className="w-full"
+              className="w-full mb-3"
               type="text"
               name="product_name"
               id="product_name"
@@ -100,12 +92,13 @@ function ProductData(props) {
               value={formik.values.product_name}
               onChange={formik.handleChange}
             />
+            <label htmlFor="product_name" className="text-yellow-800">{formik.errors.product_name}</label>
           </div>
 
           <div className="mb-4">
             <label htmlFor="price">Price</label>
             <Input
-              className="w-full"
+              className="w-full mb-3"
               type="number"
               name="price"
               id="price"
@@ -113,54 +106,38 @@ function ProductData(props) {
               value={formik.values.price}
               onChange={formik.handleChange}
             />
+            <label htmlFor="price" className="text-yellow-800">{formik.errors.price}</label>
           </div>
 
           <div className="mb-4">
             <label htmlFor="description">Description</label>
             <Textarea
-              className="w-full"
+              className="w-full mb-3"
               name="description"
               id="description"
               placeholder="Enter your Description"
               value={formik.values.description}
               onChange={formik.handleChange}
             />
+            <label htmlFor="description" className="text-yellow-800">{formik.errors.description}</label>
           </div>
 
           <div className="mb-4">
             <label htmlFor="category_id">Category</label>
             <Select
-              className="w-full"
+              inputId="category_id"
               name="category_id"
-              id="category_id"
-              value={formik.values.category_id}
-              onChange={formik.handleChange}
-            >
-              {query.data?.map((value, key) => {
-                return (
-                  <Select.Option key={key} value={value.category_id}>
-                    {value.category_name}
-                  </Select.Option>
-                );
-              })}
-            </Select>
-            {/* <Select 
-              options={
-                query.data?.map(value => {
-                  return {
-                    value: value.category_id,
-                    label: value.category_name
-                  }
-                })
-              } 
-              classNames={{
-                list: "bg-base-200",
-                menu: "bg-base-200",
-                searchBox: "bg-base-200 p-3 w-full flex",
-                searchIcon: "max-w-5 max-h-5 absolute text-right top-5 end-5"
-              }}
-              isSearchable={true}
-              /> */}
+              isSearchable
+              placeholder="Select Category"
+              onChange={(e) => formik.setFieldValue("category_id", e.value)}
+              options={query.data?.map((arr) => ({
+                value: arr.category_id,
+                label: arr.category_name,
+              }))}
+              className="react-select-container mb-3"
+              classNamePrefix="react-select"
+            />
+            <label htmlFor="category_id" className="text-yellow-600">{formik.errors.category_id}</label>
           </div>
 
           <div className="mb-4">
@@ -170,7 +147,9 @@ function ProductData(props) {
               className="w-full"
               name="product_image"
               id="product_image"
-              onChange={(e) => formik.setFieldValue("product_image", e.currentTarget.files[0])}
+              onChange={(e) =>
+                formik.setFieldValue("product_image", e.currentTarget.files[0])
+              }
             />
           </div>
         </Modal.Body>

@@ -7,7 +7,7 @@ export default {
     "./src/**/*.{tsx,jsx}",
     "./node_modules/daisyui/dist/**/*.js",
     "./node_modules/react-daisyui/dist/**/*.js",
-    "./node_modules/react-tailwindcss-select/dist/index.esm.js"
+    "./node_modules/react-select/dist/react-select.esm.js"
   ],
   theme: {
     extend: {},

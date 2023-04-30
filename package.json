@@ -24,7 +24,6 @@
     "react-select": "^5.7.2",
     "react-spinners": "^0.13.8",
     "react-table": "^7.8.0",
-    "react-tailwindcss-select": "^1.8.5",
     "sweetalert2": "^11.7.3",
     "yup": "^1.1.1"
   },

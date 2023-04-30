@@ -46,9 +46,6 @@ dependencies:
   react-table:
     specifier: ^7.8.0
     version: 7.8.0(react@18.2.0)
-  react-tailwindcss-select:
-    specifier: ^1.8.5
-    version: 1.8.5(react@18.2.0)
   sweetalert2:
     specifier: ^11.7.3
     version: 11.7.3
@@ -1494,14 +1491,6 @@ packages:
     resolution: {integrity: sha512-hNaz4ygkZO4bESeFfnfOft73iBUj8K5oKi1EcSHPAibEydfsX2MyU6Z8KCr3mv3C9Kqqh71U+DhZkFvibbnPbA==}
     peerDependencies:
       react: ^16.8.3 || ^17.0.0-0 || ^18.0.0
-    dependencies:
-      react: 18.2.0
-    dev: false
-
-  /react-tailwindcss-select@1.8.5(react@18.2.0):
-    resolution: {integrity: sha512-x29IrLiqBT5FnkC9oFQReOr05tEOZHtDtZdha84nlSWcj3qD67yonKFHXIf69yc8ElFlKUxCEv0zCllN8jHBFA==}
-    peerDependencies:
-      react: ^18.2.0
     dependencies:
       react: 18.2.0
     dev: false

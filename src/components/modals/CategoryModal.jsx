@@ -10,6 +10,7 @@ import {
 import Swal from "sweetalert2";
 import { useState, useRef, useEffect } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import * as yup from "yup";
 
 export default function CategoryModal(props) {
   const { onClickBackdrop, onSuccess, open } = props;
@@ -37,17 +38,17 @@ export default function CategoryModal(props) {
       inputRef.current.value = "";
     },
   });
-
   const formik = useFormik({
     initialValues: {
       category_name: "",
     },
+    validationSchema: yup.object().shape({ category_name: yup.string().required() }),
     onSubmit: (values) => {
       mutation.mutate(values);
-      // alert(JSON.stringify(values));
-      // setItemId(0);
+      formik.resetForm();
     },
   });
+
 
   const deleteCategory = (itemId) => {
     Swal.fire({
@@ -90,13 +91,12 @@ export default function CategoryModal(props) {
   }, [newMode]);
 
   return (
-    <Modal open={open} onClickBackdrop={onClickBackdrop}>
+    <Modal open={open} onClickBackdrop={() => {onClickBackdrop(); setNewMode(false)}}>
       <Modal.Header>Categories</Modal.Header>
       <Modal.Body>
         <div className={`mb-3 flex gap-1 ${!newMode && "hidden"}`}>
           <Input
             type="text"
-            // onBlur={() => setNewMode(false)}
             placeholder="Your New Category"
             className="w-full"
             onChange={(e) =>

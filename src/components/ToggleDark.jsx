@@ -27,7 +27,7 @@ export default function ToggleDark() {
   }, [isDark]);
 
   return (
-    <Button color="ghost" onClick={toggleDark}>
+    <Button color="ghost" className="rounded-full" onClick={toggleDark}>
       {isDark ? <FaSun /> : <FaMoon />}
     </Button>
   );
