@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form, Input, FileInput, Textarea } from "react-daisyui";
 import { useFormik } from "formik";
 import { editProduct, newProduct } from "../../api";
@@ -52,26 +52,30 @@ function ProductData(props) {
       product_name: Yup.string().required("Product Name is required"),
       price: Yup.number("Price is number").required("Price is required"),
       description: Yup.string(),
-      category_id: Yup.number(),
+      category_id: Yup.number().required("Category is required"),
       // product_image: Yup.mixed().default(null)
     }),
     onSubmit: (values) => {
-      console.log(values);
+      // console.log(values);
       mutation.mutate(values);
       formik.resetForm();
     },
   });
+
+  const mySelect = useRef();
 
   useEffect(() => {
     if (Object.keys(itemData)) {
       Object.keys(itemData).forEach((value) => {
         formik.setFieldValue(value, itemData[value]);
       });
+      mySelect.current.setValue({ value: itemData.category_id, label: itemData.category_name });
     }
   }, [itemData]);
 
   useEffect(() => {
     !itemId && formik.resetForm();
+    // console.log(mySelect.current);
   }, [itemId]);
 
   return (
@@ -92,7 +96,7 @@ function ProductData(props) {
               value={formik.values.product_name}
               onChange={formik.handleChange}
             />
-            <label htmlFor="product_name" className="text-yellow-800">{formik.errors.product_name}</label>
+            <label htmlFor="product_name" className="text-yellow-600">{formik.errors.product_name}</label>
           </div>
 
           <div className="mb-4">
@@ -130,10 +134,12 @@ function ProductData(props) {
               isSearchable
               placeholder="Select Category"
               onChange={(e) => formik.setFieldValue("category_id", e.value)}
+              ref={mySelect}
               options={query.data?.map((arr) => ({
                 value: arr.category_id,
                 label: arr.category_name,
               }))}
+              // value={formik.values.category_id}
               className="react-select-container mb-3"
               classNamePrefix="react-select"
             />
@@ -147,9 +153,8 @@ function ProductData(props) {
               className="w-full"
               name="product_image"
               id="product_image"
-              onChange={(e) =>
-                formik.setFieldValue("product_image", e.currentTarget.files[0])
-              }
+              onChange={(e) => formik.setFieldValue("product_image", e.currentTarget.files[0])}
+              required={itemId ? false : true}
             />
           </div>
         </Modal.Body>

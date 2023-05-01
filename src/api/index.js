@@ -7,3 +7,5 @@ export { default as editCategory } from "./editCategory";
 export { default as formatRupiah } from "./formatRupiah";
 export { default as removeCategory } from "./removeCategory";
 export { default as deleteProduct } from "./deleteProduct";
+export { default as searchProducts } from "./searchProducts";
+export { default as getUserData } from "./getUserData";

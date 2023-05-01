@@ -1,19 +1,24 @@
-import { Button, Card, Table, Select } from "react-daisyui";
+import { Button, Card, Table, Select, Input, InputGroup } from "react-daisyui";
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProducts, deleteProduct } from "../api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getProducts, deleteProduct, getCategories, getUserData } from "../api";
 import {
   FaChevronDown,
   FaChevronUp,
   FaPencilAlt,
+  FaSearch,
   FaTrash,
 } from "react-icons/fa";
 import ProductData from "./modals/ProductData";
 import { formatRupiah } from "../api";
 import CategoryModal from "./modals/CategoryModal";
 import { Img } from "react-image";
-// import Select from "react-select";
+import RSelect from "react-select";
 import Swal from "sweetalert2";
+import axios from "axios";
+import endpoint from "../endpoint";
+import Cookies from "js-cookie";
+import { searchProducts } from "../api";
 
 export default function Products() {
   // Menggunakan React Query agar bisa cache hasil fetching API
@@ -24,11 +29,52 @@ export default function Products() {
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [itemId, setItemId] = useState(0);
   const [itemData, setItemData] = useState({});
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [search, setSearch] = useState("");
+  const [categoryList, setCategoryList] = useState([]);
 
   const queryClient = useQueryClient();
   const query = useQuery({
-    queryKey: ["products", page, orderBy, sortDesc],
-    queryFn: async () => await getProducts(page, orderBy, sortDesc),
+    queryKey: ["products", page, orderBy, sortDesc, searchText, categoryFilter],
+    queryFn: async () =>
+      searchText || categoryFilter
+        ? await searchProducts(categoryFilter, searchText)
+        : await getProducts(page, orderBy, sortDesc),
+    onError: () => {
+      Cookies.remove("token");
+      window.location.reload();
+    },
+  });
+  const cookieData = Cookies.get("token");
+
+  const categories = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => await getCategories(),
+    onSuccess: (data) => {
+      setCategoryList([...data]);
+    }
+  });
+
+  const myUser = useQuery({
+    queryKey: ["userdata"],
+    queryFn: async () => await getUserData()
+  });
+
+  const mutation = useMutation({
+    mutationFn: async ({ item, active }) =>
+      await axios.post(
+        `${endpoint}/products/status/${item}`,
+        {
+          active,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${cookieData}`,
+          },
+        }
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
   });
 
   const sortItem = (orderBy) => {
@@ -61,6 +107,10 @@ export default function Products() {
     });
   };
 
+  useEffect(() => {
+    !search && setSearchText("");
+  }, [search]);
+
   return (
     <Card className="bg-base-200 shadow-md shadow-blue-700">
       <ProductData
@@ -76,7 +126,11 @@ export default function Products() {
         onSuccess={toggleCategoryModal}
       />
       <Card.Body>
-        <Card.Title className="mb-3">Products</Card.Title>
+        <Card.Title className="mb-3">
+          <h1 className="text-2xl mb-3">
+            {myUser.data?.store_name || ""}
+          </h1>
+        </Card.Title>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <Button color="success" onClick={() => toggleProductModal(0)}>
             Add Product
@@ -84,7 +138,42 @@ export default function Products() {
           <Button color="info" onClick={toggleCategoryModal}>
             Category
           </Button>
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="w-full"
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <RSelect
+            className="react-select-container"
+            classNamePrefix="react-select"
+            placeholder="Category..."
+            options={[
+              { value: "", label: "All" }, 
+              ...(categoryList.map(({ category_id, category_name }) => {
+                return {
+                  value: category_id,
+                  label: category_name
+                }
+              }))
+            ]}
+            inputId="select-category"
+            isSearchable
+            closeMenuOnSelect
+            defaultValue={""}
+            onChange={(e) => setCategoryFilter(e.value)}
+            escapeClearsValue
+          />
         </div>
+        <Button
+          color="black"
+          className="gap-2"
+          onClick={() => {
+            setSearchText(search);
+          }}
+        >
+          <FaSearch /> Search
+        </Button>
         <div className="overflow-x-auto mb-4">
           <Table cellPadding="3" width={"100%"}>
             <Table.Head>
@@ -103,10 +192,14 @@ export default function Products() {
               <span>Description</span>
               <span>Category</span>
               <span>Actions</span>
+              <span>Status</span>
             </Table.Head>
             <Table.Body>
               {query.data?.rows?.map((value) => (
-                <Table.Row key={value.product_id}>
+                <Table.Row
+                  key={value.product_id}
+                  className={`${!value.active && "opacity-40"}`}
+                >
                   <span>
                     {value.product_name}{" "}
                     <Img
@@ -133,6 +226,19 @@ export default function Products() {
                       <FaTrash />
                     </Button>
                   </span>
+                  <span>
+                    <Button
+                      color={`${value.active ? "ghost" : "success"}`}
+                      onClick={() =>
+                        mutation.mutate({
+                          item: value.product_id,
+                          active: !value.active,
+                        })
+                      }
+                    >
+                      {value.active ? "Disable" : "Enable"}
+                    </Button>
+                  </span>
                 </Table.Row>
               ))}
             </Table.Body>
@@ -141,8 +247,8 @@ export default function Products() {
         <div className="flex justify-center items-center gap-2">
           Page
           <Select onChange={(e) => setPage(Number(e.currentTarget.value))}>
-            {query.data?.pages?.map(value => (
-              <Select.Option value={value}>
+            {query.data?.pages?.map((value) => (
+              <Select.Option value={value} key={value}>
                 {value}
               </Select.Option>
             ))}
