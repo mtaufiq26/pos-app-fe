@@ -5,6 +5,7 @@ import {
   QueryClientProvider
 } from "@tanstack/react-query";
 import Cookies from "js-cookie";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export default function Mainpage() {
   const client = new QueryClient();
@@ -18,6 +19,7 @@ export default function Mainpage() {
         </h1>
         <QueryClientProvider client={client}>
           {loginCookie && <Products />}
+          <ReactQueryDevtools />
         </QueryClientProvider>
       </div>
     </>

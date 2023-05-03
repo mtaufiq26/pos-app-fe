@@ -31,6 +31,6 @@
   .react-select-container .react-select__input-container,
   .react-select-container .react-select__placeholder,
   .react-select-container .react-select__single-value {
-    @apply text-black dark:text-gray-400;
+    @apply text-gray-800 dark:text-gray-400;
   }
 }

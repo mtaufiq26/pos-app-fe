@@ -20,6 +20,7 @@ export default function CategoryModal(props) {
   const categories = useQuery({
     queryKey: ["categories", "select"],
     queryFn: async () => await getCategories(),
+    networkMode: "always"
   });
 
   const submitFunc = async (data) => {
@@ -37,6 +38,7 @@ export default function CategoryModal(props) {
       setItemId(0);
       inputRef.current.value = "";
     },
+    networkMode: "always"
   });
   const formik = useFormik({
     initialValues: {

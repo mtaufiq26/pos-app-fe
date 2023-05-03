@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getProducts, deleteProduct, getCategories, getUserData } from "../api";
 import {
+  FaBan,
+  FaCartPlus,
+  FaCheck,
   FaChevronDown,
   FaChevronUp,
   FaPencilAlt,
@@ -19,6 +22,10 @@ import axios from "axios";
 import endpoint from "../endpoint";
 import Cookies from "js-cookie";
 import { searchProducts } from "../api";
+import { BarLoader } from "react-spinners";
+import { trimText } from "../actions";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, removeItem } from "../features/store/cart/cartSlice";
 
 export default function Products() {
   // Menggunakan React Query agar bisa cache hasil fetching API
@@ -34,6 +41,9 @@ export default function Products() {
   const [search, setSearch] = useState("");
   const [categoryList, setCategoryList] = useState([]);
 
+  const [productCart, setProductCart] = useState([]);
+
+  const cart = useSelector((state) => state.cart.data);
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["products", page, orderBy, sortDesc, searchText, categoryFilter],
@@ -45,20 +55,29 @@ export default function Products() {
       Cookies.remove("token");
       window.location.reload();
     },
+    networkMode: "always"
   });
   const cookieData = Cookies.get("token");
+
+  const dispatch = useDispatch();
 
   const categories = useQuery({
     queryKey: ["categories"],
     queryFn: async () => await getCategories(),
     onSuccess: (data) => {
       setCategoryList([...data]);
-    }
+    },
+    networkMode: "always"
   });
+
+  // const addToCart = (product_id, product_name, price) => {
+  //   setProductCart ({ product_id, product_name, price, quantity: 1 });
+  // }
 
   const myUser = useQuery({
     queryKey: ["userdata"],
-    queryFn: async () => await getUserData()
+    queryFn: async () => await getUserData(),
+    networkMode: "always"
   });
 
   const mutation = useMutation({
@@ -75,6 +94,7 @@ export default function Products() {
         }
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+    networkMode: "always"
   });
 
   const sortItem = (orderBy) => {
@@ -111,6 +131,10 @@ export default function Products() {
     !search && setSearchText("");
   }, [search]);
 
+  useEffect(() => {
+    console.log(cart);
+  }, [cart]);
+
   return (
     <Card className="bg-base-200 shadow-md shadow-blue-700">
       <ProductData
@@ -127,9 +151,7 @@ export default function Products() {
       />
       <Card.Body>
         <Card.Title className="mb-3">
-          <h1 className="text-2xl mb-3">
-            {myUser.data?.store_name || ""}
-          </h1>
+          <h1 className="text-2xl mb-3">{myUser.data?.store_name || ""}</h1>
         </Card.Title>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <Button color="success" onClick={() => toggleProductModal(0)}>
@@ -149,13 +171,13 @@ export default function Products() {
             classNamePrefix="react-select"
             placeholder="Category..."
             options={[
-              { value: "", label: "All" }, 
-              ...(categoryList.map(({ category_id, category_name }) => {
+              { value: "", label: "All" },
+              ...categoryList.map(({ category_id, category_name }) => {
                 return {
                   value: category_id,
-                  label: category_name
-                }
-              }))
+                  label: category_name,
+                };
+              }),
             ]}
             inputId="select-category"
             isSearchable
@@ -191,8 +213,7 @@ export default function Products() {
               </span>
               <span>Description</span>
               <span>Category</span>
-              <span>Actions</span>
-              <span>Status</span>
+              <span className="text-center">Actions</span>
             </Table.Head>
             <Table.Body>
               {query.data?.rows?.map((value) => (
@@ -208,41 +229,52 @@ export default function Products() {
                     />
                   </span>
                   <span>{formatRupiah(value.price)}</span>
-                  <span>{value.description}</span>
-                  <span>{value.category_name}</span>
-                  <span className="flex gap-1">
-                    <Button
-                      color="ghost"
-                      className="rounded-full"
-                      onClick={() => toggleProductModal(value)}
-                    >
-                      <FaPencilAlt />
-                    </Button>
-                    <Button
-                      color="ghost"
-                      className="rounded-full"
-                      onClick={() => removeItem(value.product_id)}
-                    >
-                      <FaTrash />
-                    </Button>
+                  <span className="whitespace-pre-wrap">
+                    {trimText(value.description)}
                   </span>
+                  <span>{value.category_name}</span>
                   <span>
-                    <Button
-                      color={`${value.active ? "ghost" : "success"}`}
-                      onClick={() =>
-                        mutation.mutate({
-                          item: value.product_id,
-                          active: !value.active,
-                        })
-                      }
-                    >
-                      {value.active ? "Disable" : "Enable"}
-                    </Button>
+                    <InputGroup>
+                      <Button
+                        onClick={() => toggleProductModal(value)}
+                      >
+                        <FaPencilAlt />
+                      </Button>
+                      <Button
+                        onClick={() => removeItem(value.product_id)}
+                      >
+                        <FaTrash />
+                      </Button>
+                      <Button
+                        className="flex justify-center items-center"
+                        onClick={() => dispatch(addToCart(value))}
+                        disabled={!value.active}
+                      >
+                        <FaCartPlus />
+                      </Button>
+                      <Button
+                        color={!value.active && "success"}
+                        onClick={() =>
+                          mutation.mutate({
+                            item: value.product_id,
+                            active: !value.active,
+                          })
+                        }
+                      >
+                        {value.active ? <FaBan /> : <FaCheck />}
+                      </Button>
+                    </InputGroup>
                   </span>
                 </Table.Row>
               ))}
             </Table.Body>
           </Table>
+          {query.isLoading && (
+            <div className="flex justify-center items-center flex-col p-5">
+              <div>Please Wait</div>
+              <BarLoader color="#0055FF" className="mb-3" />
+            </div>
+          )}
         </div>
         <div className="flex justify-center items-center gap-2">
           Page

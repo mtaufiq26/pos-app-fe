@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Form, Input, FileInput, Textarea } from "react-daisyui";
+import { Modal, Button, Form, Input, FileInput, Textarea, InputGroup } from "react-daisyui";
 import { useFormik } from "formik";
 import { editProduct, newProduct } from "../../api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,8 +14,8 @@ function ProductData(props) {
   const query = useQuery({
     queryKey: ["categories"],
     queryFn: async () => await getCategories(),
+    networkMode: "always"
   });
-  // const [product_image, setProductImage] = useState([]);
   const submitFunc = async (values) => {
     !itemId ? await newProduct(values) : await editProduct(itemId, values);
   };
@@ -39,6 +39,7 @@ function ProductData(props) {
       });
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
+    networkMode: "always"
   });
   const formik = useFormik({
     initialValues: {
@@ -52,11 +53,9 @@ function ProductData(props) {
       product_name: Yup.string().required("Product Name is required"),
       price: Yup.number("Price is number").required("Price is required"),
       description: Yup.string(),
-      category_id: Yup.number().required("Category is required"),
-      // product_image: Yup.mixed().default(null)
+      category_id: Yup.number().required("Category is required")
     }),
     onSubmit: (values) => {
-      // console.log(values);
       mutation.mutate(values);
       formik.resetForm();
     },
@@ -101,15 +100,18 @@ function ProductData(props) {
 
           <div className="mb-4">
             <label htmlFor="price">Price</label>
-            <Input
-              className="w-full mb-3"
-              type="number"
-              name="price"
-              id="price"
-              placeholder="Enter Price (number only)"
-              value={formik.values.price}
-              onChange={formik.handleChange}
-            />
+            <InputGroup className="mb-3">
+              <span>Rp</span>
+              <Input
+                className="w-full"
+                type="number"
+                name="price"
+                id="price"
+                placeholder="Enter Price (number only)"
+                value={formik.values.price}
+                onChange={formik.handleChange}
+              />
+            </InputGroup>
             <label htmlFor="price" className="text-yellow-800">{formik.errors.price}</label>
           </div>
 
@@ -139,7 +141,6 @@ function ProductData(props) {
                 value: arr.category_id,
                 label: arr.category_name,
               }))}
-              // value={formik.values.category_id}
               className="react-select-container mb-3"
               classNamePrefix="react-select"
             />
